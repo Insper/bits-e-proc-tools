@@ -12,7 +12,7 @@ import shutil
 # from .sw.assembler.ASM import ASM
 # from .sw.vmtranslator.VMTranslate import VMTranslate
 from .util.toMIF import toMIF
-from .util.programFPGA import programCDF, programROM
+from .util.programFPGA import programSOF, programROM
 
 
 def getName(nasm):
@@ -109,9 +109,9 @@ def program():
 
 
 @program.command()
-@click.argument("cdf")
-def fpga(cdf):
-    if programCDF(cdf):
+@click.argument("sof")
+def fpga(sof):
+    if programSOF(sof):
         print("FPGA NÃ̀O PROGRAMADA!")
 
 
