@@ -1,4 +1,4 @@
-# setup for test and dev.
+# setup for test and dev..
 
 ```
 python3.8 -m venv env
