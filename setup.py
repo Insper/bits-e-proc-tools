@@ -6,7 +6,15 @@ setup(
     #    package_dir={"": "src"},
     packages=["bits", "bits.hw", "bits.sw"],
     include_package_data=True,
-    install_requires=["click", "pyyaml", "pytest", "tabulate", "myhdl"],
+    install_requires=[
+        "click",
+        "pyyaml",
+        "pytest",
+        "tabulate",
+        "myhdl",
+        "wheel",
+        "PyQt5",
+    ],
     entry_points="""
         [console_scripts]
         bits=bits:cli
