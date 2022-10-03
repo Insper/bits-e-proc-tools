@@ -1,0 +1,16 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+*.egg
+build
+htmlcov
+
+__pycache__*
+*.egg*
+
+*.hack
+*.vcd
+*dump.txt
+*.lst
