@@ -97,8 +97,8 @@ def gui():
 
 @gui.command()
 def nasm():
-    print(os.getcwd())
-    os.chdir(os.path.join(os.getcwd(), "bits", "sw", "simulator"))
+    file_path = os.path.realpath(__file__)
+    os.chdir(os.path.join(os.path.dirname(file_path) , "sw", "simulator"))
     from bits.sw.simulator.main import init_simulator_gui
 
     init_simulator_gui(None)
