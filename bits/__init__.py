@@ -6,13 +6,12 @@ from myhdl import *
 import sys
 import os.path
 import shutil
-
-# from .hw.hw_util import *
-# from .hw.test_z01 import test_z01
-# from .sw.assembler.ASM import ASM
-# from .sw.vmtranslator.VMTranslate import VMTranslate
-from .util.toMIF import toMIF
-from .util.programFPGA import programSOF, programROM
+from bits.hw.hw_util import *
+from bits.hw.test_z01 import test_z01
+from bits.sw.assembler.ASM import ASM
+from bits.sw.vmtranslator.VMTranslate import VMTranslate
+from bits.util.toMIF import toMIF
+from bits.util.programFPGA import programCDF, programROM
 
 
 def getName(nasm):
@@ -70,7 +69,7 @@ def nasm_to_hack(nasm, hack, mif=False):
         toMIF(hack, getName(hack) + ".mif")
 
 
-def proc_run(name, rom, ram, time, dump=False):
+def proc_run(name, rom, ram, time, dump=True):
     cpu = test_z01(name, rom, ram, time)
     run = cpu.run()
     if dump:
@@ -78,7 +77,9 @@ def proc_run(name, rom, ram, time, dump=False):
     return run
 
 
-# ------------------------------ #
+# ------------------------- #
+
+
 @click.group()
 @click.option("--debug", "-b", is_flag=True, help="Enables verbose mode.")
 @click.pass_context
@@ -86,9 +87,36 @@ def cli(ctx, debug):
     pass
 
 
+# ------------------------- #
+
+
 @click.group()
 def gui():
     pass
+
+
+@gui.command()
+def nasm():
+    print(os.getcwd())
+    os.chdir(os.path.join(os.getcwd(), "bits", "sw", "simulator"))
+    from bits.sw.simulator.main import init_simulator_gui
+
+    init_simulator_gui(None)
+
+
+# ------------------------- #
+
+
+@cli.command()
+@click.option("--mif", is_flag=True, help="also generates mif file")
+@click.argument("nasm")
+def assembly(nasm, mif):
+    hack = getName(nasm) + ".hack"
+    click.echo("Syncing")
+    nasm_to_hack(nasm, hack, mif)
+
+
+# ------------------------- #
 
 
 @click.group()
@@ -96,22 +124,10 @@ def program():
     pass
 
 
-# @cli.command()
-# @click.option("--mif", is_flag=True, help="also generates mif file")
-# @click.argument("nasm")
-# def assembly(nasm, mif):
-#    hack = getName(nasm) + ".hack"
-#    click.echo("Syncing")
-#    nasm_to_hack(nasm, hack, mif)
-
-
-# ------------------------- #
-
-
 @program.command()
-@click.argument("sof")
-def fpga(sof):
-    if programSOF(sof):
+@click.argument("cdf")
+def fpga(cdf):
+    if programCDF(cdf):
         print("FPGA NÃ̀O PROGRAMADA!")
 
 
@@ -135,7 +151,7 @@ def rom(fname):
 # ------------------------- #
 
 
-# cli.add_command(gui)
+cli.add_command(gui)
 cli.add_command(program)
 
 if __name__ == "__main__":
