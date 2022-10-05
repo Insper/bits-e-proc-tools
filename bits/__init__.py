@@ -6,12 +6,12 @@ from myhdl import *
 import sys
 import os.path
 import shutil
-from bits.hw.hw_util import *
-from bits.hw.test_z01 import test_z01
-from bits.sw.assembler.ASM import ASM
-from bits.sw.vmtranslator.VMTranslate import VMTranslate
-from bits.util.toMIF import toMIF
-from bits.util.programFPGA import programCDF, programROM
+from .hw.hw_util import *
+from .hw.test_z01 import test_z01
+from .sw.assembler.ASM import ASM
+from .sw.vmtranslator.VMTranslate import VMTranslate
+from .util.toMIF import toMIF
+from .util.programFPGA import programCDF, programROM
 
 
 def getName(nasm):
