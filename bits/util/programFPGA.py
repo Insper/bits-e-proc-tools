@@ -7,23 +7,16 @@ import time
 import fileinput
 
 
-def resetJtagd():
+def programCDF(cdf):
+
+    # reinicia o driver do jtagd
+    # para garantir que o mesmo está
+    # funcionando
     os.system("killall jtagd")
     time.sleep(1)
     os.system("jtagconfig")
     time.sleep(1)
 
-
-def programSOF(sof):
-    resetJtagd()
-    pSof = subprocess.Popen(
-        'quartus_pgm --no_banner --mode=jtag -o "P;{}"'.format(sof), shell=True
-    )
-    exit_codes = pSof.wait()
-
-
-def programCDF(cdf):
-    resetJtagd()
     # verifica se o .mif existe
     cdf = os.path.abspath(cdf)
 
