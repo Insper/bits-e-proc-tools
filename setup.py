@@ -50,6 +50,7 @@ setup(
         "wheel",
         "PyQt5",
     ],
+    package_data={'bits.sw.simulator': ['theme/*']},
     include_package_data=True,
     data_files=[
         (
