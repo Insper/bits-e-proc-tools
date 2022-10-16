@@ -12,6 +12,7 @@ from .sw.assembler.ASM import ASM
 from .sw.vmtranslator.VMTranslate import VMTranslate
 from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
+from .util.genImg import memTopgm
 
 
 def getName(nasm):
@@ -69,11 +70,15 @@ def nasm_to_hack(nasm, hack, mif=False):
         toMIF(hack, getName(hack) + ".mif")
 
 
-def proc_run(name, rom, ram, time, dump=True):
+def proc_run(name, rom, ram, time, dump=True, img=True):
     cpu = test_z01(name, rom, ram, time)
     run = cpu.run()
     if dump:
         cpu.dump()
+
+    if img:
+        memTopgm(ram, name)
+
     return run
 
 
@@ -97,8 +102,8 @@ def gui():
 
 @gui.command()
 def nasm():
-    file_path = os.path.realpath(__file__)
-    os.chdir(os.path.join(os.path.dirname(file_path) , "sw", "simulator"))
+    dir = os.path.join(os.path.dirname(__file__), "sw", "simulator")
+    os.chdir(dir)
     from bits.sw.simulator.main import init_simulator_gui
 
     init_simulator_gui(None)

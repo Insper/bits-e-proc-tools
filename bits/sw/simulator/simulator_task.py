@@ -23,7 +23,7 @@ class SimulatorTask(QObject):
         super().__init__()
         self.verbose = verbose
         self.file_ram_out =  os.path.abspath(temp_path + "ram_out.mif")
-        self.file_lcd_out =  os.path.abspath(temp_path + "lcd.pgm")
+        self.file_lcd_out =  os.path.abspath("rom.pgm")
         self.lst_vsim   = 'temp/rom_in.nasm' # TODO: tosco, melhorar isso !
         self.temp_path = temp_path
         self.debug = debug

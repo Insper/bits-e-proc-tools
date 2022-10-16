@@ -149,9 +149,9 @@ class AppMain(Ui_MainWindow):
         self.config_dialog_ui.setupUi(self.config_dialog)
 
     def reload_lcd(self):
-        if os.path.exists(os.path.join(TEMP_PATH, 'lcd.pgm')):
+        if os.path.exists('rom.pgm'):
             icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap(os.path.join(TEMP_PATH, 'lcd.pgm')), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            icon.addPixmap(QtGui.QPixmap('rom.pgm'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.LCDButton.setIcon(icon)
             self.LCDButton.setIconSize(QtCore.QSize(320, 240))
         else:
@@ -159,8 +159,8 @@ class AppMain(Ui_MainWindow):
             self.LCDButton.setIcon(icon)
 
     def clean_lcd(self):
-        if os.path.exists(os.path.join(TEMP_PATH, 'lcd.pgm')):
-            os.unlink(os.path.join(TEMP_PATH, 'lcd.pgm'))
+        if os.path.exists('rom.pgm'):
+            os.unlink('rom.pgm')
 
     def setup_clean_views(self, table, rows=100, caption="Dados", line_header=None):
         model = QStandardItemModel(rows, 1, self.window)
