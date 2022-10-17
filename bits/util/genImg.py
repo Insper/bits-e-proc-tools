@@ -34,10 +34,12 @@ class memTopgm(object):
 
     def genImg(self):
         for key, value in self.memIn.items():
-            if key > LCD_INIT and key < LCD_END:
+            breakpoint()
+            if key >= LCD_INIT and key <= LCD_END:
                 refAddress = key - LCD_INIT
                 ramAddress = refAddress * LCD_PX_PER_LINE
                 pxs = bin(value, 16)
+                breakpoint()
                 for i in range(LCD_PX_PER_LINE):
                     self.img[ramAddress + i] = pxs[i]
 
