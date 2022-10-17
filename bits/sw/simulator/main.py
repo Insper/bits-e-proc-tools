@@ -7,7 +7,8 @@ import argparse
 sys.path.insert(0, ".")
 import asm_utils, file_utils
 import config_dialog
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QActionGroup, QMessageBox, QProgressDialog
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QActionGroup, QMessageBox, QProgressDialog, \
+    QHeaderView
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QTextCursor, QColor, QTextFormat
 from PyQt5.QtCore import QThread, QFileSystemWatcher
 from main_window import *
@@ -132,6 +133,8 @@ class AppMain(Ui_MainWindow):
         self.lineEdit_outM.setStyleSheet(self.style_register())
         self.on_new()
         self.window.setWindowIcon(self.load_icon())
+        self.ramView.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.ramView.horizontalHeader().setStretchLastSection(True)
 
     def style_register(self):
         return 'QLineEdit { border: none; background-color: transparent; font-size:12pt; color:black; }'
