@@ -27,7 +27,9 @@ class LSTParser:
         self.headers = self._read_next()
 
     def _read_next(self):
-        return self.fix_line(self.file_in.readline()).split(" ")
+        line = self.fix_line(self.file_in.readline()).split(" ")
+        ##print(line)
+        return line
 
     def advance(self):
         results = {}
@@ -42,6 +44,7 @@ class LSTParser:
 
     def close(self):
         self.file_in.close()
+
 
 if __name__ == "__main__":
     argp = argparse.ArgumentParser()

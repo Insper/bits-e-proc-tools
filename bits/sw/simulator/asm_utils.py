@@ -27,24 +27,22 @@ def hex_str_to_bin(data):
     x = bin(int(str(data), 16))[2:]
     return "0"*(16-len(x)%17) + x
 
-
-def z01_real_line(ll, pc_counter):
-    line = 0
-    pc = 0
-
-    while True:
-        if line in ll:
-            line += 1
+def real_line(contents, pc):
+    pc = pc - 1 ##TODO Bug
+    instr_counter = 0
+    line_counter = 0
+    for line in contents.split('\n'):
+        line = line.strip().replace('  ', ' ')
+        if ':' in line or line == '' or (len(line) >= 1 and line[0] == ';'):
+            line_counter += 1
             continue
 
-        if pc == pc_counter:
+        if instr_counter == pc:
             break
-
-        pc += 1
-        line += 1
-
-    return line
-
+        else:
+            instr_counter += 1
+            line_counter += 1
+    return line_counter
 
 def z01_ram_name(pos):
     names = {

@@ -18,8 +18,7 @@ def stream_to_file(fsrc, filename):
     fsrc.seek(0, 0)
     createDir(filename)
     fdest = open(filename, "w", newline="\n")
-    for i, l in enumerate(fsrc):
-        fdest.write(l)
+    shutil.copyfileobj(fsrc, fdest)
     fsrc.seek(0, 0)
     return filename
 
@@ -30,15 +29,6 @@ def file_to_stream(filename, fdest):
     shutil.copyfileobj(fsrc, fdest)
     fsrc.close()
     return fdest
-
-
-def create_empty_rom(file_dest, size=1024):
-    createDir(file_dest)
-    dest = open(file_dest, "w")
-    for i in range(0, size):
-        dest.write("0000000000000000\n")
-    dest.close()
-    return file_dest
 
 
 def copy_file_to_model(file_in, model, preprocessor=None):
@@ -87,21 +77,12 @@ def copy_textedit_to_file(text_edit, f, preprocessor=None):
 
 
 def file_len(fname):
-    with open(fname) as f:
+    with open(fname, 'r') as f:
         for i, l in enumerate(f):
             pass
     return i + 1
 
 
 def copy_file_to_file(f1, f2, preprocessor=None):
-    f1.seek(0, 0)
-    f2.seek(0, 0)
-
-    for i, l in enumerate(f1):
-        data = l
-        if preprocessor is not None:
-            data = preprocessor(data)
-        f2.write(data)
-    f2.seek(0, 0)
-    f1.seek(0, 0)
+    shutil.copyfileobj(f1, f2)
     return f2
