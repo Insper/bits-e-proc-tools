@@ -13,6 +13,7 @@ from .sw.vmtranslator.VMTranslate import VMTranslate
 from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
 from .util.genImg import memTopgm
+from .util.debuglst import debugLst
 
 
 def getName(nasm):
@@ -109,6 +110,12 @@ def nasm():
     init_simulator_gui(None)
 
 
+@gui.command()
+@click.argument("lstFile", type=click.File("rb"))
+def debugLst():
+    debugLst(lstFile)
+
+
 # ------------------------- #
 
 
@@ -125,7 +132,8 @@ def assembly(nasm, mif):
 
 
 @click.group()
-def program():
+def program(lstFile):
+
     pass
 
 

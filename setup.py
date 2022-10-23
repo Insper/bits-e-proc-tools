@@ -49,8 +49,9 @@ setup(
         "myhdl",
         "wheel",
         "PyQt5",
+        "rich",
     ],
-    package_data={'bits.sw.simulator': ['theme/*']},
+    package_data={"bits.sw.simulator": ["theme/*"]},
     include_package_data=True,
     data_files=[
         (
