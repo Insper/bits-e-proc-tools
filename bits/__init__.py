@@ -111,9 +111,10 @@ def nasm():
 
 
 @gui.command()
-@click.argument("lstFile", type=click.File("rb"))
-def debugLst():
-    debugLst(lstFile)
+@click.argument("lstfile")
+@click.option("--ram", is_flag=True, help="Prints ram table")
+def lst(ram, lstfile):
+    debugLst(lstfile, ram)
 
 
 # ------------------------- #

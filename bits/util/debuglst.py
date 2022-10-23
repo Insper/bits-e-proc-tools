@@ -9,7 +9,9 @@ from bits.sw.simulator.lst_parser import *
 
 from rich.live import Live
 from rich.table import Table
-
+from rich import print
+from rich.console import Console
+from rich.layout import Layout
 
 dissa = {
     "100001101110010000": "addw %A, $1, %D",
@@ -79,9 +81,14 @@ def dissasembly(op):
     return instrucao
 
 
-def debugLst(lstFile):
-    app = LSTParser(lstFile)
+def debugLst(lstFile, ramMode):
+    file_in = open(lstFile, "r")
+    app = LSTParser(file_in)
 
+    layout = Layout()
+    layout.split_row(Layout(name="cpu"), Layout(name="ram"))
+
+    console = Console()
     table = Table()
     table.add_column("pcount")
     table.add_column("OP")
@@ -89,26 +96,54 @@ def debugLst(lstFile):
     table.add_column("%D")
     table.add_column("RAM")
 
+    ram = {}
+    pcoutOld = 0
     state = app.advance()
-    with Live(table, refresh_per_second=4):  # update 4 times a second to feel fluid
-        while app.has_more():
-            state = app.advance()
-            op = dissasembly(state["instruction"])
-            reg_a = f"{int(state['s_regAout'], 2)}"
-            reg_d = f"{int(state['s_regDout'], 2)}"
-            pcount = f"{int(state['pcout'], 2)}"
-            if state["writeM"] == "1":
-                update_ram = 1
-                address = f"{int(state['s_regAout'], 2)}"
-                value = f"{int(state['outM'], 2)}"
-                ram = f"RAM[{address}]={value}"
-            else:
-                ram = ""
+    while app.has_more():
+        state = app.advance()
 
-            table.add_row(
-                pcount,
-                op,
-                reg_a,
-                reg_d,
-                ram,
-            )
+        op = dissasembly(state["instruction"])
+        reg_a = f"{int(state['s_regAout'], 2)}"
+        reg_d = f"{int(state['s_regDout'], 2)}"
+
+        pcoutInt = int(state["pcout"], 2)
+        if (pcoutOld + 1) != pcoutInt:
+            table.add_row("[green bold]SALTOU", "---", "---", "---", "---")
+        pcount = f"{pcoutInt}"
+
+        if state["writeM"] == "1":
+            address = f"{int(state['s_regAout'], 2)}"
+            value = f"{int(state['outM'], 2)}"
+            ram[address] = value
+
+        ramp = ""
+        if ramMode:
+            ramp = f"{ram}"
+            # for key, value in ram.items():
+            #    ramp = ramp + f"RAM[{key}]={value} "
+        else:
+            if state["writeM"] == "1":
+                ramp = f"RAM[{address}]={value}"
+
+        table.add_row(
+            pcount,
+            op,
+            reg_a,
+            reg_d,
+            ramp,
+        )
+        pcoutOld = pcoutInt
+
+    tableRam = Table()
+    tableRam.add_column("Address")
+    tableRam.add_column("Value")
+    for key, value in ram.items():
+        tableRam.add_row(f"{key}", f"{value}")
+
+    layout["cpu"].update(table)
+    layout["ram"].update(tableRam)
+
+    console.print(table)
+    console.print("RAM FINAL (APENAS ENDERECOS ALTERADOS)")
+    console.print(tableRam)
+    # console.print(layout)
