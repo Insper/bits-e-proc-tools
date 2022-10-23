@@ -103,6 +103,10 @@ def debugLst(lstFile, ramMode):
         state = app.advance()
 
         op = dissasembly(state["instruction"])
+
+        if op == "100000000000000000":
+            break
+
         reg_a = f"{int(state['s_regAout'], 2)}"
         reg_d = f"{int(state['s_regDout'], 2)}"
 
