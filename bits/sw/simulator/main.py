@@ -2,6 +2,7 @@
 # Eduardo Marossi & Rafael Corsi @ insper.edu.br
 # Dez/2017
 # Disciplina Elementos de Sistemas
+import shutil
 import sys, os, tempfile
 import argparse
 sys.path.insert(0, ".")
@@ -12,7 +13,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QFileDialog, QAc
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QTextCursor, QColor, QTextFormat
 from PyQt5.QtCore import QThread, QFileSystemWatcher
 from main_window import *
-from simulator_task import SimulatorTask, TEMP_PATH
+from simulator_task import SimulatorTask
 from assembler_task import AssemblerTask
 from lst_parser import LSTParser
 
@@ -56,7 +57,6 @@ class AppMain(Ui_MainWindow):
 
         ## class Variables
         self.config_dialog = None
-        self.rom_stream = None
         self.rom_path = None
         self.rom_type_sel = None
         self.rom_watcher = None
@@ -112,7 +112,6 @@ class AppMain(Ui_MainWindow):
         self.romView.setExtraSelections(self.romViewSelections)
         self.verticalLayout_Rom.addWidget(self.romView)
 
-        self.rom_stream = tempfile.SpooledTemporaryFile(max_size=self.TEMP_MAX_RAM_USE, mode="w+")
         self.rom_path = None
         self.rom_type_sel = self.actionROMAssembly
         self.lst_parser = None
@@ -151,19 +150,22 @@ class AppMain(Ui_MainWindow):
         self.config_dialog_ui = config_dialog.Ui_Dialog()
         self.config_dialog_ui.setupUi(self.config_dialog)
 
+    def clean_lcd(self):
+        if os.path.exists('rom.pgm'):
+            os.unlink('rom.pgm')
+
     def reload_lcd(self):
         if os.path.exists('rom.pgm'):
             icon = QtGui.QIcon()
-            icon.addPixmap(QtGui.QPixmap('rom.pgm'), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            hnd, temp_path = tempfile.mkstemp('.pgm')
+            os.close(hnd)
+            shutil.copy2('rom.pgm', temp_path)
+            icon.addPixmap(QtGui.QPixmap(temp_path), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.LCDButton.setIcon(icon)
             self.LCDButton.setIconSize(QtCore.QSize(320, 240))
         else:
             icon = QtGui.QIcon()
             self.LCDButton.setIcon(icon)
-
-    def clean_lcd(self):
-        if os.path.exists('rom.pgm'):
-            os.unlink('rom.pgm')
 
     def setup_clean_views(self, table, rows=100, caption="Dados", line_header=None):
         model = QStandardItemModel(rows, 1, self.window)
@@ -228,19 +230,10 @@ class AppMain(Ui_MainWindow):
         return False
 
     def on_rom_assembly(self):
-        self.editor_converting = True
-        self.on_clear_rom()
-        file_utils.copy_file_to_textedit(self.rom_stream, self.romView)
-        self.rom_type_sel = self.actionROMAssembly
-        self.editor_converting = False
+        raise NotImplementedError('on_rom_assembly')
 
     def on_rom_binary(self):
-        self.editor_converting = True
-        if self.rom_type_sel == self.actionROMAssembly:
-            file_utils.copy_textedit_to_file(self.romView, self.rom_stream)
-            self.assemble(self.load_converted_asm_bin)
-
-        self.rom_type_sel = self.actionROMBinario
+        raise NotImplementedError('on_rom_binary')
 
     def on_ram_tooltip(self, item):
         text = item.text().strip()
@@ -256,7 +249,8 @@ class AppMain(Ui_MainWindow):
         self.romView.clear()
 
     def on_clear_ram(self):
-        self.ram_model = self.setup_clean_views(self.ramView, rows=self.RAM_VIEW_INITIAL_SIZE, caption="RAM", line_header=asm_utils.z01_ram_name)
+        self.ram_model = self.setup_clean_views(self.ramView, rows=self.RAM_VIEW_INITIAL_SIZE, caption="RAM",
+                                                line_header=asm_utils.z01_ram_name)
         for i in range(0, self.RAM_VIEW_INITIAL_SIZE):
             item = QStandardItem("0000000000000000")
             self.on_ram_tooltip(item)
@@ -271,8 +265,6 @@ class AppMain(Ui_MainWindow):
         self.clear_simulation()
 
     def on_voltar_inicio(self):
-        self.clean_lcd()
-        self.reload_lcd()
         self.keys_set_enable(True)
         self.data_changed = True
         self.clear_simulation()
@@ -303,10 +295,10 @@ class AppMain(Ui_MainWindow):
             filename = filename[0]
             self.rom_path = filename
 
-        if self.actionROMAssembly.isChecked():
-            file_utils.copy_textedit_to_file(self.romView, self.rom_stream)
+        rom_file = open(self.rom_path, 'w')
+        file_utils.copy_textedit_to_file(self.romView, rom_file)
+        rom_file.close()
 
-        file_utils.stream_to_file(self.rom_stream, filename)
         self.rom_watcher.addPath(self.rom_path)
 
     def on_load(self):
@@ -329,30 +321,20 @@ class AppMain(Ui_MainWindow):
         if not os.path.exists(filename):
             return
 
-        if filename.endswith(".asm") or filename.endswith(".nasm"):
-            self.load_asm(filename, self.romView)
-        elif filename.endswith(".bin") or filename.endswith(".hack"):
-            self.load_bin(filename, self.romView)
+        self.load_asm(filename, self.romView)
 
     def on_proximo(self):
         if self.data_changed:
-            self.clean_lcd()
             if self.lst_parser is not None:
                 self.lst_parser.close()
 
             self.keys_set_enable(False)
             self.keys_to_ram()
 
-            if self.actionROMAssembly.isChecked():
-                file_utils.copy_textedit_to_file(self.romView, self.rom_stream)
-                self.assemble(self.assemble_end)
-            else:
-                tmp_rom = tempfile.SpooledTemporaryFile(max_size=self.TEMP_MAX_RAM_USE, mode="w+")
-                file_utils.copy_textedit_to_file(self.romView, tmp_rom)
-                tmp_ram = self.get_updated_ram()
-                self.simulate(tmp_rom, tmp_ram)
+            self.assemble(self.assemble_end)
 
-            return False
+            return
+
         step = self.lst_parser.advance()
 
         if "s_regAout" not in step:
@@ -381,10 +363,10 @@ class AppMain(Ui_MainWindow):
         if pc_counter < 0:
             pc_counter = 0
 
-        if self.actionROMAssembly.isChecked():
-            rom_line = asm_utils.z01_real_line(self.assembler_task.labels_pos, pc_counter) - 1
-        else:
-            rom_line = pc_counter - 1
+        fa = open(self.rom_path, 'r')
+        contents = fa.read()
+        fa.close()
+        rom_line = asm_utils.real_line(contents, pc_counter)
 
         if rom_line < 0:
             rom_line = 0
@@ -394,12 +376,12 @@ class AppMain(Ui_MainWindow):
             self.step_timer.stop()
 
         document = self.romView.document()
+        rom_line = min(rom_line, document.blockCount()-1)
         block = document.findBlockByLineNumber(rom_line)
         self.romCurrentLineSelection.cursor = QTextCursor(block)
         self.romCurrentLineSelection.format.setBackground(AppMain.COLOR_CURRENT_LINE)
         self.romView.setExtraSelections(self.romViewSelections)
         self.ram_to_leds()
-        print("Próximo")
         self.reload_lcd()
         self.last_step = step
 
@@ -445,7 +427,11 @@ class AppMain(Ui_MainWindow):
         self.assembler_task = AssemblerTask(assembler, "temp/")
         rom_in = tempfile.SpooledTemporaryFile(max_size=self.TEMP_MAX_RAM_USE, mode="w+")
         rom_out = tempfile.SpooledTemporaryFile(max_size=self.TEMP_MAX_RAM_USE, mode="w+")
-        file_utils.copy_file_to_file(self.rom_stream, rom_in)
+        self.on_save()
+        fa = open(self.rom_path, 'r')
+        rom_in.write(fa.read())
+        fa.close()
+        rom_in.seek(0, 0)
         self.assembler_task.setup(rom_in, rom_out)
         self.assembler_task.finished.connect(callback)
         self.assembler_task.moveToThread(self.asm_thread)
@@ -465,7 +451,7 @@ class AppMain(Ui_MainWindow):
         self.sim_thread.started.connect(self.simulator_task.run)
         self.sim_thread.start()
         self.lock_and_show_dialog()
-        self.lst_parser.advance()
+        self.lst_parser.advance() ## ignora primeira linha BUG ##TODO
 
     def lock_and_show_dialog(self):
         ## waits for ASM thread and SIM thread to end
@@ -536,32 +522,15 @@ class AppMain(Ui_MainWindow):
         self.data_changed = False
         self.lst_parser = LSTParser(self.simulator_task.lst_stream)
 
-        if self.actionROMAssembly.isChecked():
-            rom_line = asm_utils.z01_real_line(self.assembler_task.labels_pos, 0)
-        else:
-            rom_line = 0
+        fa = open(self.rom_path, 'r')
+        contents = fa.read()
+        fa.close()
+        rom_line = asm_utils.real_line(contents, 0)
 
         document = self.romView.document()
+        rom_line = min(rom_line, document.blockCount()-1)
         self.romCurrentLineSelection.cursor = QTextCursor(document.findBlockByLineNumber(rom_line))
         self.romView.setExtraSelections(self.romViewSelections)
-
-    def load_converted_asm_bin(self):
-        self.asm_thread.quit()
-        self.asm_thread.wait()
-        if not self.check_assembler_sucess():
-            return
-        self.on_clear_rom()
-        file_utils.copy_file_to_textedit(self.assembler_task.stream_out, self.romView)
-        self.editor_converting = False
-
-    def load_converted_asm_hex(self):
-        self.asm_thread.quit()
-        self.asm_thread.wait()
-        if not self.check_assembler_sucess():
-            return
-        self.on_clear_rom()
-        file_utils.copy_file_to_textedit(self.assembler_task.stream_out, self.romView, asm_utils.bin_str_to_hex)
-        self.editor_converting = False
 
     def valid_binary(self, item):
         valid = True
@@ -580,7 +549,6 @@ class AppMain(Ui_MainWindow):
     def clear_simulation(self):
         self.last_step = None
         self.update_line_edit(self.lineEdit_A, "0000000000000000", True)
-        #self.update_line_edit(self.lineEdit_S, "0000000000000000", True)
         self.update_line_edit(self.lineEdit_D, "0000000000000000", True)
         self.update_line_edit(self.lineEdit_inM, "0000000000000000", True)
         self.update_line_edit(self.lineEdit_outM, "0000000000000000", True)
@@ -603,13 +571,8 @@ class AppMain(Ui_MainWindow):
         self.actionROMAssembly.setChecked(True)
         self.load_file(filename, model)
 
-    def load_bin(self, filename, model):
-        self.actionROMBinario.setChecked(True)
-        self.actionROMAssembly.setEnabled(False)
-        self.load_file(filename, model)
 
-
-def init_simulator_gui(rtl_dir):
+def init_simulator_gui():
     qapp = QApplication(sys.argv)
     app = AppMain()
     app.show()
@@ -618,6 +581,5 @@ def init_simulator_gui(rtl_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Z01 Simulator command line options")
-    parser.add_argument("--rtl_dir", default=None)
     args = parser.parse_args()
-    init_simulator_gui(args.rtl_dir)
+    init_simulator_gui()
