@@ -26,7 +26,6 @@ class AssemblerTask(QObject):
         self.stream_in  = stream_in
         self.file_in    = file_utils.stream_to_file(stream_in, self.temp_path + "/rom_in.nasm")
         self.file_out   = self.temp_path + "/rom_out.hack"
-        self.stream_out = stream_out
         self.running    = False
         self.end        = False
  
@@ -37,10 +36,14 @@ class AssemblerTask(QObject):
             print("Starting assembler....")
 
         ## TODO: Chamada
-        nasm_to_hack(self.file_in, self.file_out)
+        try:
+            nasm_to_hack(self.file_in, self.file_out)
+            self.assembler_error = None
+        except Exception as e:
+            self.assembler_error = e
+
         self.success = True
 
-        self.stream_out = file_utils.file_to_stream(self.file_out, self.stream_out)
         if self.verbose:
             print("Ending assembler....")
 

@@ -61,7 +61,7 @@ class AppMain(Ui_MainWindow):
         self.rom_type_sel = None
         self.rom_watcher = None
         self.ram_model = None
-        self.data_changed = None
+        self.data_changed = True
         self.lst_parser = None
         self.last_step = None
         self.editor_converting = False
@@ -500,9 +500,11 @@ class AppMain(Ui_MainWindow):
         return ram
 
     def check_assembler_sucess(self):
-        if self.assembler_task is not None and self.assembler_task.success is True:
+        if self.assembler_task is not None and self.assembler_task.success is True and self.assembler_task.assembler_error is None:
             return True
         QMessageBox.critical(self.window, "Assembler", "Erro ao traduzir assembly.")
+        if self.assembler_task is not None and self.assembler_task.assembler_error is not None:
+            QMessageBox.critical(self.window, "Assembler", str(self.assembler_task.assembler_error))
         self.step_timer.stop()
         return False
 
@@ -513,7 +515,8 @@ class AppMain(Ui_MainWindow):
         if not self.check_assembler_sucess():
             return
         print("ASM done!")
-        self.simulate(self.assembler_task.stream_out, ram)
+
+        self.simulate(self.assembler_task.file_out, ram)
 
     def simulation_end(self):
         self.sim_thread.quit() #ensure end of thread

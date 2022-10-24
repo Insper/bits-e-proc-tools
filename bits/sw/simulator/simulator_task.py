@@ -30,9 +30,9 @@ class SimulatorTask(QObject):
         self.ram_contents = {}
         self.rtl_dir = rtl_dir
 
-    def setup(self, stream_rom_in, stream_ram_in, stream_lst_out, simulation_time):
-        self.file_rom_in  = self._setup_file(stream_rom_in, self.temp_path + "/rom_out.hack")
-        self.lst_stream   = stream_lst_out
+    def setup(self, file_rom_in, stream_ram_in, stream_lst_out, simulation_time):
+        self.file_rom_in = file_rom_in
+        self.lst_stream = stream_lst_out
         self.simulation_time = simulation_time
 
         stream_ram_in.seek(0, 0)
@@ -42,15 +42,6 @@ class SimulatorTask(QObject):
             if val == 0:
                 continue
             self.ram_contents[i] = val
-
-    def _setup_file(self, fsrc, filename):
-        fsrc.seek(0, 0)
-        ftemp_n = filename + ".tmp"
-        ftemp = open(ftemp_n, "w")
-        shutil.copyfileobj(fsrc, ftemp)
-        ftemp.close()
-        os.unlink(ftemp_n)
-        return filename
 
     def run(self):
         if self.verbose:
