@@ -25,7 +25,11 @@ def cpu(inMem, instruction, outMem, addressM, writeM, pcount, rst, clk, lst_data
 
     @always_comb
     def memory_access():
-        writeM.next = instruction[5]
+        if instruction[17] == 1:
+            writeM.next = instruction[5]
+        else:
+            writeM.next = 0
+
         addressM.next = reg_a[15:]
         outMem.next = ula_out
 
