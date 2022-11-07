@@ -14,6 +14,7 @@ from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
 from .util.genImg import memTopgm
 from .util.debuglst import debugLst
+from .util.debugStack import debugStack
 
 
 def getName(nasm):
@@ -37,13 +38,10 @@ def vm_to_nasm(vm, nasm):
     v.run()
 
 
-def vm_test(f, time=100000):
-    vm = f + ".vm"
-    nasm = os.path.join("nasm", f + ".nasm")
-    hack = os.path.join("hack", f + ".hack")
+def vm_test(vm, ram, test, time=100000):
+    nasm = os.path.join("nasm", vm + ".nasm")
     vm_to_nasm(vm, nasm)
-    nasm_to_hack(nasm, hack)
-    assert proc_run_hack_test(hack, "test_" + f, time)
+    return nasm_test(nasm, ram, test, time)
 
 
 def nasm_test(nasm, ram, test, time=1000):
@@ -107,7 +105,7 @@ def nasm():
     os.chdir(dir)
     from bits.sw.simulator.main import init_simulator_gui
 
-    init_simulator_gui()
+    init_simulator_gui(None)
 
 
 @gui.command()
@@ -115,6 +113,12 @@ def nasm():
 @click.option("--ram", is_flag=True, help="Prints ram table")
 def lst(ram, lstfile):
     debugLst(lstfile, ram)
+
+
+@gui.command()
+@click.argument("lstfile")
+def stack(lstfile):
+    debugStack(lstfile)
 
 
 # ------------------------- #
@@ -133,8 +137,7 @@ def assembly(nasm, mif):
 
 
 @click.group()
-def program(lstFile):
-
+def program():
     pass
 
 
