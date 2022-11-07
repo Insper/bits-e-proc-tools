@@ -44,13 +44,10 @@ def ram_test(ref, dump):
     for key, value in ref.items():
         if key not in dump:
             dump[key] = 0
-        if dump[key] != value or cntErro > 0:
+
+        if bin(dump[key],16) != bin(value,16):
             cntErro = cntErro + 1
-            if cntErro == 1:
-                print("%04s| %16s | %16s" % ("addr", "esperado", "obtido"))
-                print("----|------------------|-----------------")
-            e = "X" if (dump[key] != value) else ""
-            print("%04s| %s | %s | %s" % (key, bin(value, 16), bin(dump[key], 16), e))
+            print("%s: %s | %s" % (key, bin(value, 16), bin(dump[key], 16)))
     return cntErro
 
 
