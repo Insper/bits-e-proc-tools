@@ -10,6 +10,7 @@ from .hw.hw_util import *
 from .hw.test_z01 import test_z01
 from .sw.assembler.ASM import ASM
 from .sw.vmtranslator.VMTranslate import VMTranslate
+from .sw.vmtranslator.Code import Code as VMCode
 from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
 from .util.genImg import memTopgm
