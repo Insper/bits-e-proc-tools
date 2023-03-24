@@ -106,7 +106,7 @@ def nasm():
     os.chdir(dir)
     from bits.sw.simulator.main import init_simulator_gui
 
-    init_simulator_gui(None)
+    init_simulator_gui()
 
 
 @gui.command()
