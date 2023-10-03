@@ -81,7 +81,7 @@ def dissasembly(op):
     return instrucao
 
 
-def debugLst(lstFile, ramMode):
+def debugLst(lstFile, ramMode, initialRam=None):
     file_in = open(lstFile, "r")
     app = LSTParser(file_in)
 
@@ -97,6 +97,17 @@ def debugLst(lstFile, ramMode):
     table.add_column("RAM")
 
     ram = {}
+    if initialRam is not None:
+        ram = {str(int(k)): str(int(v)) for k, v in initialRam.items()}
+
+    console.print("RAM INICIAL")
+    tableRamInitial = Table()
+    tableRamInitial.add_column("Address")
+    tableRamInitial.add_column("Value")
+    for key, value in ram.items():
+        tableRamInitial.add_row(f"{key}", f"{value}")
+    console.print(tableRamInitial)
+
     pcoutOld = 0
     state = app.advance()
     while app.has_more():
@@ -113,6 +124,9 @@ def debugLst(lstFile, ramMode):
         pcoutInt = int(state["pcout"], 2)
         if (pcoutOld + 1) != pcoutInt:
             table.add_row("[green bold]SALTOU", "---", "---", "---", "---")
+        elif op in ['jmp', 'jne', 'je', 'jle', 'jl', 'jge', 'jg']:
+            table.add_row("[red bold]NÃO SALTOU", "---", "---", "---", "---")
+
         pcount = f"{pcoutInt}"
 
         if state["writeM"] == "1":
@@ -146,8 +160,8 @@ def debugLst(lstFile, ramMode):
 
     layout["cpu"].update(table)
     layout["ram"].update(tableRam)
-
+    console.print('SIMULAÇÃO CPU')
     console.print(table)
-    console.print("RAM FINAL (APENAS ENDERECOS ALTERADOS)")
+    console.print("RAM FINAL")
     console.print(tableRam)
     # console.print(layout)

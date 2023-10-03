@@ -106,7 +106,7 @@ def nasm():
     os.chdir(dir)
     from bits.sw.simulator.main import init_simulator_gui
 
-    init_simulator_gui(None)
+    init_simulator_gui()
 
 
 @gui.command()
@@ -132,7 +132,6 @@ def assembly(nasm, mif):
     hack = getName(nasm) + ".hack"
     click.echo("Syncing")
     nasm_to_hack(nasm, hack, mif)
-
 
 # ------------------------- #
 
@@ -169,8 +168,36 @@ def rom(fname):
 # ------------------------- #
 
 
+@click.group()
+def sim():
+    pass
+
+@sim.command()
+@click.argument("romfile")
+@click.argument("ramfile", required=False)
+@click.option("--ram", is_flag=True, help="Prints ram table")
+def cpu(romfile, ramfile, ram, time=1000):
+    name, type = romfile.split(".")
+
+    if type == "nasm":
+        nasm_to_hack(romfile, name + ".hack", False)
+
+    if ramfile is None:
+        ram = {}
+    else:
+        import json
+        with open(ramfile) as f:
+            temp_ram = json.load(f)
+            ram = {int(k): int(v) for k, v in temp_ram.items()}
+
+    rom = rom_init_from_hack(name + ".hack")
+    proc_run(name, rom, ram.copy(), time, dump=True)
+    debugLst(name + '.lst', False, ram)
+
+
 cli.add_command(gui)
 cli.add_command(program)
+cli.add_command(sim)
 
 if __name__ == "__main__":
     cli()
