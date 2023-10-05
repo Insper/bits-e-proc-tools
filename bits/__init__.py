@@ -71,6 +71,8 @@ def nasm_to_hack(nasm, hack, mif=False):
 
 
 def proc_run(name, rom, ram, time, dump=True, img=True):
+    if dump:
+        mem_dump_file(ram, name + "_ram_init.txt")
     cpu = test_z01(name, rom, ram, time)
     run = cpu.run()
     if dump:
@@ -96,27 +98,17 @@ def cli(ctx, debug):
 
 
 @click.group()
-def gui():
+def debug():
     pass
 
 
-@gui.command()
-def nasm():
-    dir = os.path.join(os.path.dirname(__file__), "sw", "simulator")
-    os.chdir(dir)
-    from bits.sw.simulator.main import init_simulator_gui
-
-    init_simulator_gui()
+@debug.command()
+@click.argument("name")
+def nasm(name):
+    debugLst(name)
 
 
-@gui.command()
-@click.argument("lstfile")
-@click.option("--ram", is_flag=True, help="Prints ram table")
-def lst(ram, lstfile):
-    debugLst(lstfile, ram)
-
-
-@gui.command()
+@debug.command()
 @click.argument("lstfile")
 def stack(lstfile):
     debugStack(lstfile)
@@ -132,6 +124,7 @@ def assembly(nasm, mif):
     hack = getName(nasm) + ".hack"
     click.echo("Syncing")
     nasm_to_hack(nasm, hack, mif)
+
 
 # ------------------------- #
 
@@ -172,6 +165,7 @@ def rom(fname):
 def sim():
     pass
 
+
 @sim.command()
 @click.argument("romfile")
 @click.argument("ramfile", required=False)
@@ -186,16 +180,17 @@ def cpu(romfile, ramfile, ram, time=1000):
         ram = {}
     else:
         import json
+
         with open(ramfile) as f:
             temp_ram = json.load(f)
             ram = {int(k): int(v) for k, v in temp_ram.items()}
 
     rom = rom_init_from_hack(name + ".hack")
     proc_run(name, rom, ram.copy(), time, dump=True)
-    debugLst(name + '.lst', False, ram)
+    debugLst(name + ".lst", False, ram)
 
 
-cli.add_command(gui)
+cli.add_command(debug)
 cli.add_command(program)
 cli.add_command(sim)
 

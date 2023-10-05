@@ -4,6 +4,7 @@
 
 import argparse
 import sys
+import os
 
 from bits.sw.simulator.lst_parser import *
 
@@ -69,7 +70,6 @@ dissa = {
 
 
 def dissasembly(op):
-
     if op[0] == "0":
         dec = int(op, 2)
         instrucao = f"leaw ${dec}, %A"
@@ -81,12 +81,26 @@ def dissasembly(op):
     return instrucao
 
 
-def debugLst(lstFile, ramMode, initialRam=None):
-    file_in = open(lstFile, "r")
-    app = LSTParser(file_in)
+def debugLst(name):
+    name_lst = name + ".lst"
+    name_ram_in = name + "_ram_init.txt"
+    name_ram_end = name + "_ram_end.txt"
+
+    if os.path.exists(name_lst):
+        file_lst = open(name_lst, "r")
+    else:
+        print("Arquivo lst não encontrado")
+        return
+
+    if os.path.exists(name_ram_in):
+        file_ram = open(name_ram_in, "r")
+    else:
+        file_ram = None
+
+    app = LSTParser(file_lst)
 
     layout = Layout()
-    layout.split_row(Layout(name="cpu"), Layout(name="ram"))
+    layout.split_row(Layout(name="in_ram"), Layout(name="cpu"), Layout(name="end_ram"))
 
     console = Console()
     table = Table()
@@ -96,20 +110,24 @@ def debugLst(lstFile, ramMode, initialRam=None):
     table.add_column("%D")
     table.add_column("RAM")
 
-    ram = {}
-    if initialRam is not None:
-        ram = {str(int(k)): str(int(v)) for k, v in initialRam.items()}
+    in_ram = {}
+    if file_ram is not None:
+        for n in file_ram.readlines():
+            try:
+                addr, value = n.split(":")
+                in_ram[int(addr)] = int(value, 2)
+            except:
+                pass
 
-    console.print("RAM INICIAL")
-    tableRamInitial = Table()
-    tableRamInitial.add_column("Address")
-    tableRamInitial.add_column("Value")
-    for key, value in ram.items():
-        tableRamInitial.add_row(f"{key}", f"{value}")
-    console.print(tableRamInitial)
+    tableInRam = Table()
+    tableInRam.add_column("Address")
+    tableInRam.add_column("Value")
+    for key, value in in_ram.items():
+        tableInRam.add_row(f"{key}", f"{value}")
 
     pcoutOld = 0
     state = app.advance()
+    ram = {}
     while app.has_more():
         state = app.advance()
 
@@ -124,7 +142,7 @@ def debugLst(lstFile, ramMode, initialRam=None):
         pcoutInt = int(state["pcout"], 2)
         if (pcoutOld + 1) != pcoutInt:
             table.add_row("[green bold]SALTOU", "---", "---", "---", "---")
-        elif op in ['jmp', 'jne', 'je', 'jle', 'jl', 'jge', 'jg']:
+        elif op in ["jmp", "jne", "je", "jle", "jl", "jge", "jg"]:
             table.add_row("[red bold]NÃO SALTOU", "---", "---", "---", "---")
 
         pcount = f"{pcoutInt}"
@@ -152,16 +170,19 @@ def debugLst(lstFile, ramMode, initialRam=None):
         )
         pcoutOld = pcoutInt
 
-    tableRam = Table()
-    tableRam.add_column("Address")
-    tableRam.add_column("Value")
+    tableEndRam = Table()
+    tableEndRam.add_column("Address")
+    tableEndRam.add_column("Value")
     for key, value in ram.items():
-        tableRam.add_row(f"{key}", f"{value}")
+        tableEndRam.add_row(f"{key}", f"{value}")
 
+    layout["in_ram"].update(tableInRam)
     layout["cpu"].update(table)
-    layout["ram"].update(tableRam)
-    console.print('SIMULAÇÃO CPU')
+    layout["end_ram"].update(tableEndRam)
+    console.print("---- RAM INICIAL ----")
+    console.print(tableInRam)
+    console.print("---- SIMULAÇÃO CPU ----")
     console.print(table)
-    console.print("RAM FINAL")
-    console.print(tableRam)
+    console.print("--- RAM FINAL ALTERADA ---")
+    console.print(tableEndRam)
     # console.print(layout)
