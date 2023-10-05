@@ -153,13 +153,8 @@ def debugLst(name):
             ram[address] = value
 
         ramp = ""
-        if ramMode:
-            ramp = f"{ram}"
-            # for key, value in ram.items():
-            #    ramp = ramp + f"RAM[{key}]={value} "
-        else:
-            if state["writeM"] == "1":
-                ramp = f"RAM[{address}]={value}"
+        if state["writeM"] == "1":
+            ramp = f"RAM[{address}]={value}"
 
         table.add_row(
             pcount,
