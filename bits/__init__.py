@@ -48,7 +48,11 @@ def vm_test(vm, ram, test, time=100000):
 def nasm_test(nasm, ram, test, time=1000):
     name = getName(nasm)
     hack = name + ".hack"
-    nasm_to_hack(nasm, hack)
+    path_atual = os.getcwd()
+    if path_atual[-8:] == '/sw/nasm':
+        nasm_to_hack(nasm, hack)
+    else:
+        nasm_to_hack(f'sw/nasm/{nasm}', hack)
     rom = rom_init_from_hack(hack)
 
     run = proc_run(name, rom, ram, time)
