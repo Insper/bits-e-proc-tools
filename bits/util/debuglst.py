@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-#!/usr/bin/env python3
-
+from io import StringIO
 import argparse
 import sys
 import os
@@ -81,7 +80,7 @@ def dissasembly(op):
     return instrucao
 
 
-def debugLst(name):
+def debugLst(name, quiet=False):
     name_lst = name + ".lst"
     name_ram_in = name + "_ram_init.txt"
     name_ram_end = name + "_ram_end.txt"
@@ -102,7 +101,7 @@ def debugLst(name):
     layout = Layout()
     layout.split_row(Layout(name="in_ram"), Layout(name="cpu"), Layout(name="end_ram"))
 
-    console = Console()
+    console = Console(file=StringIO() if quiet else None, record=quiet)
     table = Table()
     table.add_column("pcount")
     table.add_column("OP")
@@ -181,3 +180,4 @@ def debugLst(name):
     console.print("--- RAM FINAL ALTERADA ---")
     console.print(tableEndRam)
     # console.print(layout)
+    return console

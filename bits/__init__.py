@@ -8,7 +8,7 @@ from .sw.assembler.ASM import ASM
 from .sw.vmtranslator.VMTranslate import VMTranslate
 from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
-from .hw.hw_util import rom_init_from_hack, ram_test
+from .hw.hw_util import rom_init_from_hack, ram_test, mem_dump_file
 
 
 def getName(nasm):
@@ -43,7 +43,7 @@ def nasm_test(nasm, ram, test, time=1000, quiet=True):
     hack = name + ".hack"
     nasm_to_hack(nasm, hack, False, False)
     rom = rom_init_from_hack(hack)
-    run = proc_run(name, rom, ram, time, not quiet)
+    run = proc_run(name, rom, ram, time, quiet=quiet)
     return ram_test(test, run["ram"], quiet=quiet)
 
 
@@ -62,18 +62,18 @@ def nasm_to_hack(nasm, hack, mif=False, print=True):
         toMIF(hack, getName(hack) + ".mif")
 
 
-def proc_run(name, rom, ram, time, dump=True, img=True):
+def proc_run(name, rom, ram, time, dump=True, img=True, quiet=False):
     from .hw.test_z01 import test_z01
     from .util.genImg import memTopgm
     if dump:
         mem_dump_file(ram, name + "_ram_init.txt")
-    cpu = test_z01(name, rom, ram, time, quiet=not dump)
+    cpu = test_z01(name, rom, ram, time, quiet=quiet)
     run = cpu.run()
     if dump:
         cpu.dump()
 
     if img:
-        memTopgm(ram, name, quiet=not dump)
+        memTopgm(ram, name, quiet=quiet)
 
     return run
 
@@ -183,7 +183,7 @@ def cpu(romfile, ramfile, ram, time=1000):
             ram = {int(k): int(v) for k, v in temp_ram.items()}
 
     rom = rom_init_from_hack(name + ".hack")
-    proc_run(name, rom, ram.copy(), time, dump=True)
+    proc_run(name, rom, ram.copy(), time, quiet=True)
     debugLst(name + ".lst", False, ram)
 
 
