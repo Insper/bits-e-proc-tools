@@ -41,18 +41,20 @@ def z01_sim(ram, rom, lst_data):
 
 
 class test_z01:
-    def __init__(self, name, rom, ram, time):
+    def __init__(self, name, rom, ram, time, quiet=False):
         self.name = name
         self.rom = rom
         self.ram = ram
         self.runTime = time
         self.lst_data = []
+        self.quiet = quiet
 
     def run(self):
-        print("--- %s ---" % self.name)
+        if not self.quiet:
+            print("--- %s ---" % self.name)
         tb = z01_sim(self.ram, self.rom, self.lst_data)
         tb.config_sim(trace=True, name=self.name, tracebackup=False)
-        tb.run_sim(self.runTime)
+        tb.run_sim(self.runTime, quiet=self.quiet)
         tb.quit_sim()
         return {"ram": self.ram, "tst": self.lst_data}
 

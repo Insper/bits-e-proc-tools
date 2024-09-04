@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
 
 import click
-import yaml
-from myhdl import *
 import sys
 import os.path
 import shutil
-from .hw.hw_util import *
-from .hw.test_z01 import test_z01
 from .sw.assembler.ASM import ASM
 from .sw.vmtranslator.VMTranslate import VMTranslate
-from .sw.vmtranslator.Code import Code as VMCode
 from .util.toMIF import toMIF
 from .util.programFPGA import programCDF, programROM
-from .util.genImg import memTopgm
-from .util.debuglst import debugLst
-from .util.debugStack import debugStack
+from .hw.hw_util import rom_init_from_hack, ram_test
 
 
 def getName(nasm):
@@ -45,20 +38,19 @@ def vm_test(vm, ram, test, time=100000):
     return nasm_test(nasm, ram, test, time)
 
 
-def nasm_test(nasm, ram, test, time=1000):
+def nasm_test(nasm, ram, test, time=1000, quiet=True):
     name = getName(nasm)
     hack = name + ".hack"
-    nasm_to_hack(nasm, hack)
+    nasm_to_hack(nasm, hack, False, False)
     rom = rom_init_from_hack(hack)
-
-    run = proc_run(name, rom, ram, time)
-
-    return True if ram_test(test, run["ram"]) == 0 else False
+    run = proc_run(name, rom, ram, time, not quiet)
+    return ram_test(test, run["ram"], quiet=quiet)
 
 
-def nasm_to_hack(nasm, hack, mif=False):
-    print(" 1/1 gerando novos arquivos .hack")
-    print(" destine: {}".format(hack))
+def nasm_to_hack(nasm, hack, mif=False, print=True):
+    if print:
+        print(" 1/1 gerando novos arquivos .hack")
+        print(" destine: {}".format(hack))
 
     fNasm = open(nasm, "r")
     fHack = open(hack, "w")
@@ -71,15 +63,17 @@ def nasm_to_hack(nasm, hack, mif=False):
 
 
 def proc_run(name, rom, ram, time, dump=True, img=True):
+    from .hw.test_z01 import test_z01
+    from .util.genImg import memTopgm
     if dump:
         mem_dump_file(ram, name + "_ram_init.txt")
-    cpu = test_z01(name, rom, ram, time)
+    cpu = test_z01(name, rom, ram, time, quiet=not dump)
     run = cpu.run()
     if dump:
         cpu.dump()
 
     if img:
-        memTopgm(ram, name)
+        memTopgm(ram, name, quiet=not dump)
 
     return run
 
@@ -105,12 +99,14 @@ def debug():
 @debug.command()
 @click.argument("name")
 def nasm(name):
+    from .util.debuglst import debugLst
     debugLst(name)
 
 
 @debug.command()
 @click.argument("lstfile")
 def stack(lstfile):
+    from .util.debugStack import debugStack
     debugStack(lstfile)
 
 
@@ -171,6 +167,7 @@ def sim():
 @click.argument("ramfile", required=False)
 @click.option("--ram", is_flag=True, help="Prints ram table")
 def cpu(romfile, ramfile, ram, time=1000):
+    from .util.debuglst import debugLst
     name, type = romfile.split(".")
 
     if type == "nasm":

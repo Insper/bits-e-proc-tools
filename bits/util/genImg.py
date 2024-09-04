@@ -18,7 +18,7 @@ LCD_PX_PER_LINE = 16
 
 
 class memTopgm(object):
-    def __init__(self, memIn, imgOut):
+    def __init__(self, memIn, imgOut, quiet=False):
         self.memIn = memIn
         self.imgOut = imgOut + ".pgm"
         self.width = 320
@@ -26,6 +26,7 @@ class memTopgm(object):
         self.maxval = 1
         self.ppm_header = f"P1 {self.width} {self.height} {self.maxval}\n"
         self.img = [0] * (self.width * self.height)
+        self.quiet = quiet
         self.do()
 
     def do(self):
@@ -42,7 +43,8 @@ class memTopgm(object):
                     self.img[ramAddress + i] = pxs[i]
 
     def saveImg(self):
-        print(self.imgOut)
+        if not self.quiet:
+            print(self.imgOut)
 
         with open(self.imgOut, "wb") as fw:
             fw.write(bytearray(self.ppm_header, "ascii"))

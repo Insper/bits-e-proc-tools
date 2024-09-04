@@ -38,17 +38,19 @@ def mem_dump_file(mem, outFile):
             f.write(str(key) + " : " + bin(mem[key], 16) + "\n")
         f.close()
 
-
-def ram_test(ref, dump):
-    cntErro = 0
-    for key, value in ref.items():
+def ram_test(ref, dump, quiet=False):
+    errors = []
+    for temp, value in ref.items():
+        key = int(temp)
         if key not in dump:
             dump[key] = 0
-
-        if bin(dump[key],16) != bin(value,16):
-            cntErro = cntErro + 1
-            print("%s: %s | %s" % (key, bin(value, 16), bin(dump[key], 16)))
-    return cntErro
+        if int(dump[key]) != int(value):
+            errors.append("%s: %s | %s - value %s" % (key, bin(value, 16), bin(dump[key], 16),  dump[key]))
+        if not quiet:
+            print(errors[-1])
+    if quiet:
+        return errors
+    return len(errors)	
 
 
 @block
